@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import * as SplashScreen from "expo-splash-screen";
 import { StripeProvider } from "@stripe/stripe-react-native";
 import { Colors } from "@/constants/colors";
+import { Layout } from "@/constants/layout";
 import { useAppFonts } from "@/hooks/useFonts";
 import { ToastHost } from "@/components/ui/Toast";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -49,17 +50,7 @@ export default function RootLayout() {
           >
             <AuthSyncProvider>
               <StatusBar style="dark" />
-              {/*
-                Colonne de contenu à largeur maximale.
-
-                L'app est dessinée pour un téléphone : sur un iPad de 11
-                pouces, les 50 écrans s'étiraient sur toute la largeur, ce
-                qu'Apple a refusé en guideline 4 (« crowded interface »).
-                On borne donc la largeur et on centre.
-
-                Sur téléphone la contrainte est inerte — tous les écrans font
-                moins de 640 points de large — donc aucun risque de régression.
-              */}
+              {/* Colonne de contenu bornée et centrée — voir `constants/layout`. */}
               <View style={styles.root}>
                 <View style={styles.column}>
                   <Stack
@@ -88,8 +79,6 @@ const styles = StyleSheet.create({
   column: {
     flex: 1,
     width: "100%",
-    // 640 points : au-delà, les lignes de texte deviennent trop longues à lire
-    // et les cartes s'étirent. En deçà (tous les téléphones), sans effet.
-    maxWidth: 640,
+    maxWidth: Layout.contentMaxWidth,
   },
 });

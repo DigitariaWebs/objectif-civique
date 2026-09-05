@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View, useWindowDimensions } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Svg, {
   Defs,
@@ -7,6 +7,7 @@ import Svg, {
   Rect,
   Stop,
 } from "react-native-svg";
+import { useContainerSize } from "@/hooks/useContainerSize";
 
 /**
  * Soft, "grainy-gradient" backdrop:
@@ -16,14 +17,21 @@ import Svg, {
  *  - a white wash on the upper half to soften the blob tops
  */
 export function GrainyBackground() {
-  const { width, height } = useWindowDimensions();
-
-  // Scale the SVG to the screen. A big canvas so radial falloff is gentle.
-  const W = width;
-  const H = height;
+  // Scale the SVG to the container, not to the window: content is bounded to a
+  // column (see `constants/layout`), so on iPad the two differ and a
+  // window-sized canvas pushed the blobs out of frame. Before the first
+  // measure W and H are 0, so the SVG paints nothing and only the base gradient
+  // below shows — no need to hold the whole backdrop back for a frame.
+  const { size, onLayout } = useContainerSize();
+  const W = size?.width ?? 0;
+  const H = size?.height ?? 0;
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <View
+      style={StyleSheet.absoluteFill}
+      pointerEvents="none"
+      onLayout={onLayout}
+    >
       <LinearGradient
         colors={["#F3F6FB", "#FBFAF7", "#F5F1F8"]}
         locations={[0, 0.55, 1]}

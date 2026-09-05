@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { ChevronLeft, RotateCcw, Bookmark } from "lucide-react-native";
@@ -27,6 +26,7 @@ import { SERIES_SIZE, seriesCount, seriesSlice } from "@/lib/series";
 import { THEMES } from "@/data/themes";
 import { useProgressStore } from "@/store/progressStore";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useContainerSize } from "@/hooks/useContainerSize";
 import { Category, Question, ThemeId } from "@/types";
 import { useUserStore } from "@/store/userStore";
 import { isPaid } from "@/lib/entitlements";
@@ -41,7 +41,7 @@ export default function FlashcardDeck() {
   const { slug, free } = useLocalSearchParams<{ slug: string; free?: string }>();
   const isFree = free === "1";
   const insets = useSafeAreaInsets();
-  const { width: screenWidth } = useWindowDimensions();
+  const { size, onLayout } = useContainerSize();
   const haptics = useHaptics();
   const bookmarks = useProgressStore((s) => s.bookmarks);
   const toggleBookmark = useProgressStore((s) => s.toggleBookmark);
@@ -186,10 +186,15 @@ export default function FlashcardDeck() {
   }
 
   const isBookmarked = bookmarks.includes(current.id);
-  const cardWidth = screenWidth - 40;
+  // Largeur du conteneur, pas de la fenetre : sur iPad la carte etait plus
+  // large que la colonne qui la rogne (voir `constants/layout`).
+  const cardWidth = (size?.width ?? 0) - 40;
 
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.surface }}>
+    <View
+      style={{ flex: 1, backgroundColor: Colors.surface }}
+      onLayout={onLayout}
+    >
       <View style={[styles.topBar, { paddingTop: insets.top + 12 }]}>
         <Pressable
           onPress={() => router.back()}
@@ -219,53 +224,55 @@ export default function FlashcardDeck() {
       </View>
 
       <View style={styles.center}>
-        <Pressable onPress={onFlip} style={{ width: cardWidth, height: CARD_HEIGHT }}>
-          <Animated.View
-            style={[
-              styles.card,
-              styles.cardFront,
-              { width: cardWidth },
-              frontStyle,
-            ]}
-          >
-            <Text style={styles.faceLabel}>Question</Text>
-            <ScrollView
-              style={styles.faceScroll}
-              contentContainerStyle={styles.faceScrollContent}
-              showsVerticalScrollIndicator={false}
+        {size ? (
+          <Pressable onPress={onFlip} style={{ width: cardWidth, height: CARD_HEIGHT }}>
+            <Animated.View
+              style={[
+                styles.card,
+                styles.cardFront,
+                { width: cardWidth },
+                frontStyle,
+              ]}
             >
-              <Text style={styles.faceText}>{current.text}</Text>
-            </ScrollView>
-            <Text style={styles.hint}>Touchez pour retourner</Text>
-          </Animated.View>
+              <Text style={styles.faceLabel}>Question</Text>
+              <ScrollView
+                style={styles.faceScroll}
+                contentContainerStyle={styles.faceScrollContent}
+                showsVerticalScrollIndicator={false}
+              >
+                <Text style={styles.faceText}>{current.text}</Text>
+              </ScrollView>
+              <Text style={styles.hint}>Touchez pour retourner</Text>
+            </Animated.View>
 
-          <Animated.View
-            style={[
-              styles.card,
-              styles.cardBack,
-              { width: cardWidth },
-              backStyle,
-            ]}
-          >
-            <Text style={[styles.faceLabel, { color: Colors.white }]}>
-              Réponse
-            </Text>
-            <ScrollView
-              style={styles.faceScroll}
-              contentContainerStyle={styles.faceScrollContent}
-              showsVerticalScrollIndicator={false}
+            <Animated.View
+              style={[
+                styles.card,
+                styles.cardBack,
+                { width: cardWidth },
+                backStyle,
+              ]}
             >
-              {current.correctIndex >= 0 && current.choices[current.correctIndex] ? (
-                <Text style={[styles.faceText, { color: Colors.white }]}>
-                  {current.choices[current.correctIndex]}
-                </Text>
-              ) : null}
-              {getExplanation(current) ? (
-                <Text style={styles.explanation}>{getExplanation(current)}</Text>
-              ) : null}
-            </ScrollView>
-          </Animated.View>
-        </Pressable>
+              <Text style={[styles.faceLabel, { color: Colors.white }]}>
+                Réponse
+              </Text>
+              <ScrollView
+                style={styles.faceScroll}
+                contentContainerStyle={styles.faceScrollContent}
+                showsVerticalScrollIndicator={false}
+              >
+                {current.correctIndex >= 0 && current.choices[current.correctIndex] ? (
+                  <Text style={[styles.faceText, { color: Colors.white }]}>
+                    {current.choices[current.correctIndex]}
+                  </Text>
+                ) : null}
+                {getExplanation(current) ? (
+                  <Text style={styles.explanation}>{getExplanation(current)}</Text>
+                ) : null}
+              </ScrollView>
+            </Animated.View>
+          </Pressable>
+        ) : null}
       </View>
 
       <View style={[styles.bottom, { paddingBottom: insets.bottom + 12 }]}>

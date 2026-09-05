@@ -5,7 +5,6 @@ import {
   Pressable,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
 } from "react-native";
 import { router } from "expo-router";
@@ -14,17 +13,18 @@ import { Colors } from "@/constants/colors";
 import { Typography } from "@/constants/typography";
 import { Assets } from "@/constants/assets";
 import { PillButton } from "@/components/ui/PillButton";
-import { AppleIcon, GoogleIcon } from "@/components/SocialIcons";
+import { GoogleIcon } from "@/components/SocialIcons";
 import { IconTilePattern } from "@/components/IconTilePattern";
 import { useHaptics } from "@/hooks/useHaptics";
-import { signInWithGoogle, signInWithApple } from "@/lib/auth";
+import { useContainerSize } from "@/hooks/useContainerSize";
+import { signInWithGoogle } from "@/lib/auth";
 import { isPersoComplete } from "@/store/userStore";
 import { toast } from "@/store/toastStore";
 
 export default function AuthLanding() {
   const insets = useSafeAreaInsets();
   const haptics = useHaptics();
-  const { height: screenHeight } = useWindowDimensions();
+  const { size, onLayout } = useContainerSize();
 
   const onGoogle = async () => {
     haptics.light();
@@ -40,30 +40,19 @@ export default function AuthLanding() {
       );
     }
   };
-  const onApple = async () => {
-    haptics.light();
-    try {
-      const user = await signInWithApple();
-      if (!user) return;
-      router.replace(
-        isPersoComplete(user) ? "/(tabs)" : "/(onboarding)/perso/step-1"
-      );
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Échec de la connexion Apple."
-      );
-    }
-  };
 
   return (
-    <View style={styles.container}>
-      <IconTilePattern
-        height={screenHeight}
-        iconSize={28}
-        tileOpacity={0.05}
-        tintColor="#1a1c1e"
-        style={styles.patternLayer}
-      />
+    <View style={styles.container} onLayout={onLayout}>
+      {size ? (
+        <IconTilePattern
+          width={size.width}
+          height={size.height}
+          iconSize={28}
+          tileOpacity={0.05}
+          tintColor="#1a1c1e"
+          style={styles.patternLayer}
+        />
+      ) : null}
 
       <View style={[styles.topBar, { paddingTop: insets.top + 12 }]}>
         <View style={styles.brandRow}>
@@ -94,34 +83,32 @@ export default function AuthLanding() {
       </View>
 
       <View style={[styles.bottom, { paddingBottom: insets.bottom + 20 }]}>
-        <Pressable
-          onPress={onGoogle}
-          accessibilityRole="button"
-          accessibilityLabel="Continuer avec Google"
-          style={({ pressed }) => [
-            styles.socialBtn,
-            pressed && { opacity: 0.85 },
-          ]}
-        >
-          <GoogleIcon size={20} />
-          <Text style={styles.socialLabel}>Continuer avec Google</Text>
-        </Pressable>
+        {/*
+          Connexions tierces : masquées sur iOS. Voir le commentaire détaillé
+          dans `sign-in.tsx` — la guideline 4.8 impose Sign in with Apple dès
+          lors qu'une connexion tierce est proposée, et Sign in with Apple
+          échouait côté serveur.
 
-        {Platform.OS === "ios" && (
+          Cet écran avait été oublié lors du retrait : il proposait encore
+          Google sur toutes les plateformes, et un bouton Apple conditionné au
+          seul `Platform.OS` — donc affiché puis en échec sur les iPad sans
+          connexion Apple disponible. Le bouton Apple disparaît ici plutôt
+          qu'être conditionné à `useAppleAvailable()` comme dans `sign-in` :
+          sur cet écran il n'accompagne aucune connexion par e-mail, il ne
+          reste donc rien à mettre en conformité avec la 4.8.
+        */}
+        {Platform.OS !== "ios" && (
           <Pressable
-            onPress={onApple}
+            onPress={onGoogle}
             accessibilityRole="button"
-            accessibilityLabel="Continuer avec Apple"
+            accessibilityLabel="Continuer avec Google"
             style={({ pressed }) => [
               styles.socialBtn,
-              styles.appleBtn,
               pressed && { opacity: 0.85 },
             ]}
           >
-            <AppleIcon size={20} color={Colors.white} />
-            <Text style={[styles.socialLabel, { color: Colors.white }]}>
-              Continuer avec Apple
-            </Text>
+            <GoogleIcon size={20} />
+            <Text style={styles.socialLabel}>Continuer avec Google</Text>
           </Pressable>
         )}
 
@@ -232,10 +219,6 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderWidth: 1.5,
     borderColor: Colors.outlineVariant,
-  },
-  appleBtn: {
-    backgroundColor: "#000000",
-    borderColor: "#000000",
   },
   socialLabel: {
     ...Typography.button,

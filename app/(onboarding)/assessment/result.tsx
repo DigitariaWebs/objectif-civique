@@ -4,7 +4,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
 } from "react-native";
 import { router } from "expo-router";
@@ -28,6 +27,7 @@ import { GhostButton } from "@/components/ui/GhostButton";
 import { IconTilePattern } from "@/components/IconTilePattern";
 import { useSessionStore } from "@/store/sessionStore";
 import { useUserStore } from "@/store/userStore";
+import { useContainerSize } from "@/hooks/useContainerSize";
 import { DEADLINE_LABELS, GOAL_LABELS, LEVEL_LABELS } from "@/data/questions";
 import { PLANS } from "@/data/plans";
 import { scoreSession } from "@/lib/quizEngine";
@@ -35,7 +35,7 @@ import { recommendPlan } from "@/lib/planRecommendation";
 
 export default function AssessmentResult() {
   const insets = useSafeAreaInsets();
-  const { height: screenHeight } = useWindowDimensions();
+  const { size, onLayout } = useContainerSize();
   const session = useSessionStore((s) => s.current);
   const user = useUserStore((s) => s.user);
 
@@ -58,14 +58,20 @@ export default function AssessmentResult() {
   const recoPlan = PLANS.find((p) => p.id === reco.planId);
 
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.surface }}>
-      <IconTilePattern
-        height={screenHeight}
-        iconSize={28}
-        tileOpacity={0.05}
-        tintColor="#1a1c1e"
-        style={styles.patternLayer}
-      />
+    <View
+      style={{ flex: 1, backgroundColor: Colors.surface }}
+      onLayout={onLayout}
+    >
+      {size ? (
+        <IconTilePattern
+          width={size.width}
+          height={size.height}
+          iconSize={28}
+          tileOpacity={0.05}
+          tintColor="#1a1c1e"
+          style={styles.patternLayer}
+        />
+      ) : null}
 
       <View style={[styles.topBar, { paddingTop: insets.top + 12 }]}>
         <View style={{ flex: 1 }} />

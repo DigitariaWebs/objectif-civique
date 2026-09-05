@@ -4,7 +4,6 @@ import {
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from "react-native";
 import { router } from "expo-router";
 import * as LucideIcons from "lucide-react-native";
@@ -22,13 +21,16 @@ import { PillButton } from "@/components/ui/PillButton";
 import { GhostButton } from "@/components/ui/GhostButton";
 import { WeeklyChart } from "@/components/WeeklyChart";
 import { useProgressStore, getSuccessRate } from "@/store/progressStore";
+import { useContainerSize } from "@/hooks/useContainerSize";
 import { THEMES } from "@/data/themes";
 import { ACHIEVEMENTS } from "@/data/achievements";
 import { todayKey } from "@/lib/formatters";
 
 export default function ProgressTab() {
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  // Largeur du conteneur, pas de la fenetre : sur iPad le graphique etait
+  // dimensionne sur la fenetre et depassait la colonne, donc rogne a droite.
+  const { size, onLayout } = useContainerSize();
   const progress = useProgressStore();
 
   const successRate = getSuccessRate({
@@ -53,6 +55,7 @@ export default function ProgressTab() {
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
+      onLayout={onLayout}
       contentContainerStyle={{
         padding: 16,
         paddingTop: insets.top + 12,
@@ -99,7 +102,9 @@ export default function ProgressTab() {
           <Text style={styles.sectionTitle}>7 derniers jours</Text>
           <Badge label="Réussite" variant="gold" />
         </View>
-        <WeeklyChart data={progress.dailyStats} width={width - 60} />
+        {size ? (
+          <WeeklyChart data={progress.dailyStats} width={size.width - 60} />
+        ) : null}
       </View>
 
       <Text style={[styles.sectionTitle, { marginTop: 20, marginBottom: 10 }]}>

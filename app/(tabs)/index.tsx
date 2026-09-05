@@ -6,7 +6,6 @@ import {
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from "react-native";
 import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -40,6 +39,7 @@ import { useSessionStore } from "@/store/sessionStore";
 import { GOAL_LABELS } from "@/data/questions";
 import { THEMES } from "@/data/themes";
 import { useHaptics } from "@/hooks/useHaptics";
+import { useContainerSize } from "@/hooks/useContainerSize";
 import { getPresentation } from "@/lib/goalPresentation";
 import { getResumeTarget } from "@/lib/resume";
 import { isPaid } from "@/lib/entitlements";
@@ -59,7 +59,7 @@ type TileDef = {
 
 export default function HomeTab() {
   const insets = useSafeAreaInsets();
-  const { width: screenWidth } = useWindowDimensions();
+  const { size, onLayout } = useContainerSize();
   const user = useUserStore((s) => s.user);
   const progress = useProgressStore();
   const haptics = useHaptics();
@@ -98,9 +98,11 @@ export default function HomeTab() {
   );
   const themesPct = Math.min(1, themeAvg / 100);
 
-  // Compute explicit tile width so the grid is reliably 2 per row
-  const contentWidth = screenWidth - 40; // minus screen horizontal padding 20 * 2
-  const tileWidth = (contentWidth - 12) / 2; // minus gap
+  // Largeur de la colonne mesuree, pas celle de la fenetre : le contenu est
+  // borne (voir `constants/layout`), donc sur iPad la fenetre est plus large
+  // que cet ecran et la grille debordait de la colonne.
+  const contentWidth = (size?.width ?? 0) - 40; // moins le padding 20 * 2
+  const tileWidth = (contentWidth - 12) / 2; // moins l'ecart
 
   const go = (fn: () => void) => () => {
     haptics.light();
@@ -152,7 +154,10 @@ export default function HomeTab() {
   ];
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#F3F6FB" }}>
+    <View
+      style={{ flex: 1, backgroundColor: "#F3F6FB" }}
+      onLayout={onLayout}
+    >
       <GrainyBackground />
 
       <ScrollView
@@ -403,11 +408,13 @@ export default function HomeTab() {
         </View>
 
         {/* 2×2 compact tile grid */}
-        <View style={styles.grid}>
-          {tiles.map(({ key, ...rest }) => (
-            <StudyTile key={key} {...rest} width={tileWidth} />
-          ))}
-        </View>
+        {size ? (
+          <View style={styles.grid}>
+            {tiles.map(({ key, ...rest }) => (
+              <StudyTile key={key} {...rest} width={tileWidth} />
+            ))}
+          </View>
+        ) : null}
 
         {/* Bloc parcours spécifique au profil */}
         {user?.goal ? (

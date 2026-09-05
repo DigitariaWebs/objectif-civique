@@ -1,13 +1,9 @@
 import React from "react";
-import {
-  ImageSourcePropType,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ImageSourcePropType, StyleSheet, Text, View } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Colors } from "@/constants/colors";
+import { Layout } from "@/constants/layout";
 
 type Props = {
   imageSource: ImageSourcePropType;
@@ -32,9 +28,15 @@ export function OnboardingSlide({
   sheetHeight,
   navReserved,
 }: Props) {
+  // La pastille est posee sur la photo, pas sur le bandeau blanc : a 10 %
+  // d'opacite elle disparaissait sur les cliches clairs (le Pantheon de la
+  // deuxieme diapositive). Un fond blanc quasi opaque la detache de n'importe
+  // quelle scene, et la teinte pleine porte la couleur d'accent.
   const eyebrowColor = accent === "red" ? Colors.secondary : Colors.primary;
-  const eyebrowBg =
-    accent === "red" ? "rgba(239,65,53,0.10)" : "rgba(0,85,164,0.10)";
+  const eyebrowBg = "rgba(255,255,255,0.92)";
+  const eyebrowBorder =
+    accent === "red" ? "rgba(239,65,53,0.35)" : "rgba(0,85,164,0.30)";
+  const wide = width >= Layout.wideBreakpoint;
 
   return (
     <View style={[styles.container, { width, height }]}>
@@ -62,10 +64,7 @@ export function OnboardingSlide({
           "rgba(255,255,255,1)",
         ]}
         locations={[0, 0.55, 1]}
-        style={[
-          styles.bottomFade,
-          { height: sheetHeight + 120, bottom: 0 },
-        ]}
+        style={[styles.bottomFade, { height: sheetHeight + 120, bottom: 0 }]}
         pointerEvents="none"
       />
 
@@ -73,17 +72,25 @@ export function OnboardingSlide({
       <View
         style={[
           styles.sheet,
+          wide && styles.sheetWide,
           { height: sheetHeight, paddingBottom: navReserved },
         ]}
         pointerEvents="none"
       >
-        <View style={[styles.eyebrow, { backgroundColor: eyebrowBg }]}>
+        <View
+          style={[
+            styles.eyebrow,
+            { backgroundColor: eyebrowBg, borderColor: eyebrowBorder },
+          ]}
+        >
           <Text style={[styles.eyebrowText, { color: eyebrowColor }]}>
             {eyebrow}
           </Text>
         </View>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
+        <Text style={[styles.title, wide && styles.titleWide]}>{title}</Text>
+        <Text style={[styles.subtitle, wide && styles.subtitleWide]}>
+          {subtitle}
+        </Text>
       </View>
     </View>
   );
@@ -111,15 +118,19 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    paddingHorizontal: 28,
     paddingTop: 20,
+    paddingHorizontal: 28,
     justifyContent: "flex-start",
+  },
+  sheetWide: {
+    paddingHorizontal: 40,
   },
   eyebrow: {
     alignSelf: "flex-start",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 999,
+    borderWidth: 1,
     marginBottom: 16,
   },
   eyebrowText: {
@@ -136,10 +147,18 @@ const styles = StyleSheet.create({
     letterSpacing: -0.6,
     marginBottom: 12,
   },
+  titleWide: {
+    fontSize: 36,
+    lineHeight: 43,
+  },
   subtitle: {
     color: Colors.textSecondary,
     fontFamily: "Inter_400Regular",
     fontSize: 15,
     lineHeight: 22,
+  },
+  subtitleWide: {
+    fontSize: 17,
+    lineHeight: 26,
   },
 });
