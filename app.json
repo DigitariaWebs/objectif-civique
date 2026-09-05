@@ -3,7 +3,7 @@
     "name": "Objectif Civique",
     "slug": "objectif-civique",
     "scheme": "objectifcivique",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "icon": "./assets/branding/icon.png",
