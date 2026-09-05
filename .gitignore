@@ -33,3 +33,8 @@ supabase/.temp/
 
 # Fichier temporaire de clé (ne jamais committer)
 fichier.txt
+
+# Projets natifs generes par "expo prebuild" (Pods inclus).
+# Le flux de build est managed : EAS regenere ces dossiers a chaque build.
+/ios/
+/android/
